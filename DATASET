@@ -1,0 +1,14 @@
+A single dialogue is a one file, inside there are sentences wrote with a prefix of an USERNAME.
+
+Dalek:
+- I shall speak only to the Doctor!
+Christopher:
+- You will get rusty.
+- Rose, please submit the code till midnight.
+
+Filename is an identifying string which points directly to one and only one dialogue in the GitHub corpus/universe,
+which can be one of: pull request, push, or issue comments
+
+i.e. pull#mule-tester#github-connector#7315464.txt
+
+Which means a dialogue inside pull request no 7315464 of a repo mule-tester/github-connector

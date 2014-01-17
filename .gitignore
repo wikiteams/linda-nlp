@@ -34,3 +34,5 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+/comments_on_github_2013.csv
+/dialogue_health_journal.log
