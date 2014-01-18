@@ -161,8 +161,14 @@ if __name__ == "__main__":
                             for candidate in soup.findAll("div", {"class": "comment-header -comment-header"}):
                                 author = candidate.find("a", {"class": "comment-header-author"}).contents[0]
                                 result_txt_file.write(u'-[' + author + u']' + os.linesep)
-                                sentence = candidate.parent.find("div", {"class": "js-comment-body comment-body markdown-body markdown-format"}).contents[1]
-                                result_txt_file.write(unicode(sentence) + os.linesep)
+                                sentence_search = candidate.parent.find("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})
+                                if sentence_search is not None:
+                                    sentence = sentence_search.contents[1]
+                                    result_txt_file.write(unicode(sentence) + os.linesep)
+                                email_quote_search = candidate.parent.find("div", {"class": "js-comment-body comment-body markdown-body email-format"})
+                                if email_quote_search is not None:
+                                    email_quote = email_quote_search.find("div", {"class": "email-fragment"}).contents[0]
+                                    result_txt_file.write(unicode(email_quote) + os.linesep)
                         result_txt_file.close()
 
             print 'Moving next'
