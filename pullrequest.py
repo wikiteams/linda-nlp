@@ -14,13 +14,11 @@ import csv
 import scream
 import codecs
 import cStringIO
-import __builtin__
 import os
 import sys
 import urllib
 import simplejson
 from bs4 import BeautifulSoup
-from requests_oauthlib import OAuth2Session
 
 
 class MyDialect(csv.Dialect):
