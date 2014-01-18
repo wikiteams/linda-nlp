@@ -21,6 +21,7 @@ import __builtin__
 import time
 import datetime
 import urllib
+import simplejson
 
 
 class MyDialect(csv.Dialect):
@@ -118,11 +119,17 @@ if __name__ == "__main__":
             reponame = key.split('/')[5]
             pullnumber = key.split('/')[8]
 
-            filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber + '.json'
+            filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
 
-            local_filename, headers = urllib.urlretrieve(key, filename)
+            local_filename, headers = urllib.urlretrieve(key, filename + '.json')
             with open(local_filename, 'r') as content_file:
-                content = content_file.read()
-                print content
+                #content = content_file.read()
+                #print content
+                json = simplejson.load(content_file)
+                if (len(json) < 3) and (json['message'] == 'Not Found'):
+                    print 'Pull request dont exist anymore'
+                else:
+                    html_addr = json['html_url']
+                    local_filename_html, headers_html = urllib.urlretrieve(html_addr, filename + '.html')
 
             print 'Moving next'
