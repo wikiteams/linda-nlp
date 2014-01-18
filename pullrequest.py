@@ -15,9 +15,12 @@ import scream
 import codecs
 import cStringIO
 import __builtin__
+import os
+import sys
 import urllib
 import simplejson
 from bs4 import BeautifulSoup
+from requests_oauthlib import OAuth2Session
 
 
 class MyDialect(csv.Dialect):
@@ -104,6 +107,18 @@ if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say(version_name)
 
+    print 'using: ' + sys.argv[1]
+
+    # This information is obtained upon registration of a new GitHub
+    client_id = sys.argv[1]
+    client_secret = sys.argv[2]
+    #authorization_base_url = 'https://github.com/login/oauth/authorize'
+    #token_url = 'https://github.com/login/oauth/access_token'
+
+    #github = OAuth2Session(client_id, state=session['oauth_state'])
+    #token = github.fetch_token(token_url, client_secret=client_secret,
+    #authorization_response=request.url)
+
     with open(pull_request_filename, 'rb') as source_csvfile:
         reposReader = UnicodeReader(source_csvfile)
         reposReader.next()
@@ -117,7 +132,13 @@ if __name__ == "__main__":
 
             filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
 
-            local_filename, headers = urllib.urlretrieve(key, filename + '.json')
+            local_filename, headers = urllib.urlretrieve(key + '?client_id=' + client_id + '&client_secret=' + client_secret, filename + '.json')
+            #better with authentication
+            #local_filename = filename + '.json'
+            #response = client.get(key)
+            #fjson = open(local_filename, 'wb')
+            #fjson.write(response.content)
+            #fjson.close
             with open(local_filename, 'r') as content_file:
                 #content = content_file.read()
                 #print content
@@ -127,16 +148,23 @@ if __name__ == "__main__":
                 else:
                     html_addr = json['html_url']
                     local_filename_html, headers_html = urllib.urlretrieve(html_addr, filename + '.html')
-                    # btw, whats the result code here ?
+                    # btw, whats the html result code here ?
                     print 'File downloaded, lets get to scrapping dialogues from there..'
                     with codecs.open(filename + '.txt', 'wb', 'utf-8') as result_txt_file:
                         #result_txt_file.write('\n')
                         with open(local_filename_html, 'r') as html_content_file:
                             soup = BeautifulSoup(html_content_file)
                             discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
-                            result_txt_file.write(discussion_title + '\n')
-                            for candidate in soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"}):
-                                print candidate.contents[0]
+                            discussion_initiator = soup.find("span", {"class": "discussion-topic-author"}).contents[0].contents[0]
+                            result_txt_file.write(u'[' + discussion_title + u']' + os.linesep)
+                            result_txt_file.write(u'-[' + discussion_initiator + u']' + os.linesep)
+                            first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
+                            result_txt_file.write(unicode(first_sentence) + os.linesep)
+                            for candidate in soup.findAll("div", {"class": "comment-header -comment-header"}):
+                                author = candidate.find("a", {"class": "comment-header-author"}).contents[0]
+                                result_txt_file.write(u'-[' + author + u']' + os.linesep)
+                                sentence = candidate.parent.find("div", {"class": "js-comment-body comment-body markdown-body markdown-format"}).contents[1]
+                                result_txt_file.write(unicode(sentence) + os.linesep)
                         result_txt_file.close()
 
             print 'Moving next'
