@@ -11,17 +11,13 @@ version_name = 'version 1.0 codename: Gallifrey'
 pull_request_filename = 'comments_on_github_2013.csv'
 
 import csv
-import getopt
 import scream
-import gc
-import sys
 import codecs
 import cStringIO
 import __builtin__
-import time
-import datetime
 import urllib
 import simplejson
+from bs4 import BeautifulSoup
 
 
 class MyDialect(csv.Dialect):
@@ -131,5 +127,16 @@ if __name__ == "__main__":
                 else:
                     html_addr = json['html_url']
                     local_filename_html, headers_html = urllib.urlretrieve(html_addr, filename + '.html')
+                    # btw, whats the result code here ?
+                    print 'File downloaded, lets get to scrapping dialogues from there..'
+                    with codecs.open(filename + '.txt', 'wb', 'utf-8') as result_txt_file:
+                        #result_txt_file.write('\n')
+                        with open(local_filename_html, 'r') as html_content_file:
+                            soup = BeautifulSoup(html_content_file)
+                            discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
+                            result_txt_file.write(discussion_title + '\n')
+                            for candidate in soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"}):
+                                print candidate.contents[0]
+                        result_txt_file.close()
 
             print 'Moving next'
