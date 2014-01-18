@@ -20,6 +20,7 @@ import cStringIO
 import __builtin__
 import time
 import datetime
+import urllib
 
 
 class MyDialect(csv.Dialect):
@@ -108,6 +109,20 @@ if __name__ == "__main__":
 
     with open(pull_request_filename, 'rb') as source_csvfile:
         reposReader = UnicodeReader(source_csvfile)
+        reposReader.next()
         for row in reposReader:
             key = str(row[10])
             print 'Working on comment ' + key
+
+            repoowner = str(row[7])
+            reponame = key.split('/')[5]
+            pullnumber = key.split('/')[8]
+
+            filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber + '.json'
+
+            local_filename, headers = urllib.urlretrieve(key, filename)
+            with open(local_filename, 'r') as content_file:
+                content = content_file.read()
+                print content
+
+            print 'Moving next'
