@@ -43,11 +43,29 @@ Be advised, that GitHub quota mechanism may apply and cut you from downloading t
 **Required data**
 
 You will need to place a dataset .csv file which you can download from here: https://dl.dropboxusercontent.com/u/103068909/comments_on_github_2013.csv
+The .csv file must be located in the same directory where the python script is located.
+Dig into my code for further reference..
+
+Genesis of the dataset:
+
+It was crawled from the Google Big Query
+
+```
+select payload_comment_commit_id, payload_comment_updated_at, payload_comment_created_at, 
+payload_comment_path, payload_comment_user_id, payload_comment_user_avatar_url, 
+payload_comment_user_url, payload_comment_user_login, payload_comment_user_gravatar_id, 
+payload_comment_position, payload_comment_url, payload_comment_body, 
+payload_comment_original_commit_id, payload_comment_original_position, repository_url
+from [githubarchive:github.timeline]
+where PARSE_UTC_USEC(payload_comment_created_at) >= PARSE_UTC_USEC('2012-11-01 00:00:00')
+and PARSE_UTC_USEC(payload_comment_created_at) < PARSE_UTC_USEC('2013-11-01 00:00:00')
+order by repository_url
+```
 
 **Expected result**
 
 .JSON files, .TXT files (ready to be annotated by Brat), and .HTML files (i.e. with pull request content)
 
-Other
+Acknowledgment
 
-Name of this repository is a big Thank You and a tribute to my sister 'Linda'
+Name of this repository is a big Thank You and a tribute to my sister '**Linda**'
