@@ -1,9 +1,10 @@
 '''
-Downloads more details about dialogues happening in GitHub
+Downloads more details about dialogues happening in GitHub.
+Now (from version 1.1) includes new GitHub discussion layout (which changed around 01/02.2014)
 
-@since 1.0
+@version 1.1
 @author Oskar Jarczyk
-
+@since 1.0
 @update 06.02.2014
 '''
 
@@ -142,8 +143,15 @@ if __name__ == "__main__":
                     with codecs.open(filename + '.txt', 'wb', 'utf-8') as result_txt_file:
                         with open(local_filename_html, 'r') as html_content_file:
                             soup = BeautifulSoup(html_content_file)
-                            discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
-                            discussion_initiator = soup.find("span", {"class": "discussion-topic-author"}).contents[0].contents[0]
+                            #discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
+                            #github changed to a new tag:
+                            title_h1 = soup.find("h1", {"class": "gh-header-title"})
+                            discussion_title = title_h1.find("span", {"class": "js-issue-title"}).contents[0] + title_h1.find(
+                                "span", {"class": "gh-header-number"}).contents[0]
+                            #discussion_initiator = soup.find("span", {"class": "discussion-topic-author"}).contents[0].contents[0]
+                            #github changed to a new tag:
+                            discussion_initiator = soup.find("a", {
+                                "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
                             result_txt_file.write(u'[' + discussion_title + u']' + os.linesep)
                             result_txt_file.write(u'-[' + discussion_initiator + u']' + os.linesep)
                             first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
