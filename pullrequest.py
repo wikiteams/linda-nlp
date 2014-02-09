@@ -4,10 +4,10 @@ Downloads more details about dialogues happening in GitHub
 @since 1.0
 @author Oskar Jarczyk
 
-@update 17.01.2014
+@update 06.02.2014
 '''
 
-version_name = 'version 1.0 codename: Gallifrey'
+version_name = 'version 1.1 codename: Sonic'
 pull_request_filename = 'comments_on_github_2013.csv'
 
 import csv
@@ -105,17 +105,15 @@ if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say(version_name)
 
+    if len(sys.argv) < 3:
+        print 'OAuth id and/or secret missing, please lunch program with credentials as arguments'
+        exit(-1)
+
     print 'using: ' + sys.argv[1]
 
     # This information is obtained upon registration of a new GitHub
     client_id = sys.argv[1]
     client_secret = sys.argv[2]
-    #authorization_base_url = 'https://github.com/login/oauth/authorize'
-    #token_url = 'https://github.com/login/oauth/access_token'
-
-    #github = OAuth2Session(client_id, state=session['oauth_state'])
-    #token = github.fetch_token(token_url, client_secret=client_secret,
-    #authorization_response=request.url)
 
     with open(pull_request_filename, 'rb') as source_csvfile:
         reposReader = UnicodeReader(source_csvfile)
@@ -131,15 +129,8 @@ if __name__ == "__main__":
             filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
 
             local_filename, headers = urllib.urlretrieve(key + '?client_id=' + client_id + '&client_secret=' + client_secret, filename + '.json')
-            #better with authentication
-            #local_filename = filename + '.json'
-            #response = client.get(key)
-            #fjson = open(local_filename, 'wb')
-            #fjson.write(response.content)
-            #fjson.close
+
             with open(local_filename, 'r') as content_file:
-                #content = content_file.read()
-                #print content
                 json = simplejson.load(content_file)
                 if (len(json) < 3) and (json['message'] == 'Not Found'):
                     print 'Pull request dont exist anymore'
@@ -149,7 +140,6 @@ if __name__ == "__main__":
                     # btw, whats the html result code here ?
                     print 'File downloaded, lets get to scrapping dialogues from there..'
                     with codecs.open(filename + '.txt', 'wb', 'utf-8') as result_txt_file:
-                        #result_txt_file.write('\n')
                         with open(local_filename_html, 'r') as html_content_file:
                             soup = BeautifulSoup(html_content_file)
                             discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
