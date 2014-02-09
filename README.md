@@ -35,7 +35,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 It's a command prompt program, requires Python 2.7+
 
 ```
-python pullrequest.py
+python pullrequest.py client_oath_id client_secret
+```
+
+or unix nohup version
+
+```
+nohup python pullrequest.py client_oath_id client_secret > logs.txt &
 ```
 
 Be advised, that GitHub quota mechanism may apply and cut you from downloading through urllib and API.
