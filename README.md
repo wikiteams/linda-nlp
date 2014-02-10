@@ -30,6 +30,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+**Program goal**
+
+Script creates a dataset of all GitHub-held dialogues which happened during past year. Moreover, gender of the sentence author is being guessed - which can make for further gender-alike analysis. But the main goal is to tag the dataset with dialog acts (like i.e. criticism, information providing, etc.). Finally, it will allow to associate particular dialog acts with repository quality and make word-clouds on demand.
+
+
 **Usage description**
 
 It's a command prompt program, requires Python 2.7+
