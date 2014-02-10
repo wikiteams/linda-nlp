@@ -139,6 +139,7 @@ if __name__ == "__main__":
     client_secret = sys.argv[2]
 
     persist_md5 = dict()
+    persist_users = dict()
 
     with open(pull_request_filename, 'rb') as source_csvfile:
         reposReader = UnicodeReader(source_csvfile)
@@ -184,8 +185,19 @@ if __name__ == "__main__":
                             #first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
                             #result_txt_file.write(unicode(first_sentence) + os.linesep)
                             #in new discussion layout there is no need to parse seperatly "first sentence"
-                            for candidate in soup.findAll("div", {"class": "timeline-comment timeline-comment-"}):
-                                result_txt_file.write(os.linesep)
+                            #for candidate in soup.findAll("div", {"class": "timeline-comment timeline-comment-"}):
+                            #    result_txt_file.write(os.linesep)
+                            #    author = candidate.find("a", {"class": "author"}).contents[0]
+                            #    result_txt_file.write(u'-[' + author + u']' + os.linesep)
+                            #    sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
+                            #    if sentence_search is not None:
+                            #        sentence = sentence_search.contents[1:-1]
+                            #        for s in sentence:
+                            #            tag = str(s).strip()
+                            #            if ( (len(tag) > 1) and (tag != 'None')):
+                            #                result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
+                                    #result_txt_file.write(os.linesep)
+                            for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
                                 author = candidate.find("a", {"class": "author"}).contents[0]
                                 result_txt_file.write(u'-[' + author + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
@@ -195,21 +207,13 @@ if __name__ == "__main__":
                                         tag = str(s).strip()
                                         if ( (len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
-                                    #result_txt_file.write(os.linesep)
-                            for candidate in soup.findAll("div", {"class": "timeline-comment timeline-comment-"}):
-                                author = candidate.find("a", {"class": "author"}).contents[0]
-                                result_txt_file.write(u'-[' + author + u']' + os.linesep)
-                                sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
-                                if sentence_search is not None:
-                                    sentence = sentence_search.contents[1:-1]
+                                email_search = candidate.find("div", {"class": "comment-body markdown-body email-format js-comment-body"})
+                                if email_search is not None:
+                                    sentence = email_search.contents[1:-1]
                                     for s in sentence:
                                         tag = str(s).strip()
                                         if ( (len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
-                                    #result_txt_file.write(os.linesep)
-                                #if email_quote_search is not None:
-                                #    email_quote = email_quote_search.find("div", {"class": "email-fragment"}).contents[0]
-                                #    result_txt_file.write(unicode(email_quote) + os.linesep)
                         result_txt_file.close()
 
                     hexi = hashlib.md5(open(filename + '.txt').read()).hexdigest()
