@@ -1,6 +1,7 @@
 '''
 Downloads more details about dialogues happening in GitHub.
-Now (from version 1.1) includes new GitHub discussion layout (which changed around 01/02.2014)
+Now (from version 1.1) includes new GitHub discussion layout
+(which changed around 01/02.2014)
 
 @version 1.1
 @author Oskar Jarczyk
@@ -19,6 +20,7 @@ import os
 import sys
 import urllib
 import simplejson
+import hashlib
 from bs4 import BeautifulSoup
 
 
@@ -102,12 +104,32 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
+
+def remove_html_markup(s):
+    tag = False
+    quote = False
+    out = ""
+
+    for c in s:
+            if c == '<' and not quote:
+                tag = True
+            elif c == '>' and not quote:
+                tag = False
+            elif (c == '"' or c == "'") and tag:
+                quote = not quote
+            elif not tag:
+                out = out + c
+
+    return out
+
+
 if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say(version_name)
 
     if len(sys.argv) < 3:
-        print 'OAuth id and/or secret missing, please lunch program with credentials as arguments'
+        print 'OAuth id and/or secret missing, '
+        + 'please lunch program with credentials as arguments'
         exit(-1)
 
     print 'using: ' + sys.argv[1]
@@ -115,6 +137,8 @@ if __name__ == "__main__":
     # This information is obtained upon registration of a new GitHub
     client_id = sys.argv[1]
     client_secret = sys.argv[2]
+
+    persist_md5 = dict()
 
     with open(pull_request_filename, 'rb') as source_csvfile:
         reposReader = UnicodeReader(source_csvfile)
@@ -129,7 +153,9 @@ if __name__ == "__main__":
 
             filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
 
-            local_filename, headers = urllib.urlretrieve(key + '?client_id=' + client_id + '&client_secret=' + client_secret, filename + '.json')
+            local_filename, headers = urllib.urlretrieve(key + '?client_id='
+                                                         + client_id + '&client_secret='
+                                                         + client_secret, filename + '.json')
 
             with open(local_filename, 'r') as content_file:
                 json = simplejson.load(content_file)
@@ -137,7 +163,8 @@ if __name__ == "__main__":
                     print 'Pull request dont exist anymore'
                 else:
                     html_addr = json['html_url']
-                    local_filename_html, headers_html = urllib.urlretrieve(html_addr, filename + '.html')
+                    local_filename_html, headers_html = urllib.urlretrieve(
+                        html_addr, filename + '.html')
                     # btw, whats the html result code here ?
                     print 'File downloaded, lets get to scrapping dialogues from there..'
                     with codecs.open(filename + '.txt', 'wb', 'utf-8') as result_txt_file:
@@ -152,21 +179,45 @@ if __name__ == "__main__":
                             #github changed to a new tag:
                             discussion_initiator = soup.find("a", {
                                 "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
-                            result_txt_file.write(u'[' + discussion_title + u']' + os.linesep)
                             result_txt_file.write(u'-[' + discussion_initiator + u']' + os.linesep)
-                            first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
-                            result_txt_file.write(unicode(first_sentence) + os.linesep)
-                            for candidate in soup.findAll("div", {"class": "comment-header -comment-header"}):
-                                author = candidate.find("a", {"class": "comment-header-author"}).contents[0]
+                            result_txt_file.write(u'[' + discussion_title + u']' + os.linesep)
+                            #first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
+                            #result_txt_file.write(unicode(first_sentence) + os.linesep)
+                            #in new discussion layout there is no need to parse seperatly "first sentence"
+                            for candidate in soup.findAll("div", {"class": "timeline-comment timeline-comment-"}):
+                                result_txt_file.write(os.linesep)
+                                author = candidate.find("a", {"class": "author"}).contents[0]
                                 result_txt_file.write(u'-[' + author + u']' + os.linesep)
-                                sentence_search = candidate.parent.find("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})
+                                sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
-                                    sentence = sentence_search.contents[1]
-                                    result_txt_file.write(unicode(sentence) + os.linesep)
-                                email_quote_search = candidate.parent.find("div", {"class": "js-comment-body comment-body markdown-body email-format"})
-                                if email_quote_search is not None:
-                                    email_quote = email_quote_search.find("div", {"class": "email-fragment"}).contents[0]
-                                    result_txt_file.write(unicode(email_quote) + os.linesep)
+                                    sentence = sentence_search.contents[1:-1]
+                                    for s in sentence:
+                                        tag = str(s).strip()
+                                        if ( (len(tag) > 1) and (tag != 'None')):
+                                            result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
+                                    #result_txt_file.write(os.linesep)
+                            for candidate in soup.findAll("div", {"class": "timeline-comment timeline-comment-"}):
+                                author = candidate.find("a", {"class": "author"}).contents[0]
+                                result_txt_file.write(u'-[' + author + u']' + os.linesep)
+                                sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
+                                if sentence_search is not None:
+                                    sentence = sentence_search.contents[1:-1]
+                                    for s in sentence:
+                                        tag = str(s).strip()
+                                        if ( (len(tag) > 1) and (tag != 'None')):
+                                            result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
+                                    #result_txt_file.write(os.linesep)
+                                #if email_quote_search is not None:
+                                #    email_quote = email_quote_search.find("div", {"class": "email-fragment"}).contents[0]
+                                #    result_txt_file.write(unicode(email_quote) + os.linesep)
                         result_txt_file.close()
+
+                    hexi = hashlib.md5(open(filename + '.txt').read()).hexdigest()
+                    if hexi in persist_md5:
+                        print 'Duplicated!'
+                        os.remove(filename + '.txt')
+                    else:
+                        print 'A new dialog confirmed.'
+                        persist_md5[hexi] = filename + '.txt'
 
             print 'Moving next'
