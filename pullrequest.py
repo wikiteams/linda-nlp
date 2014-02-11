@@ -1,3 +1,4 @@
+# coding=UTF-8
 '''
 Downloads more details about dialogues happening in GitHub.
 Now (from version 1.1) includes new GitHub discussion layout
@@ -23,6 +24,7 @@ import simplejson
 import hashlib
 import mechanize
 from bs4 import BeautifulSoup
+import unicodedata
 
 
 class MyDialect(csv.Dialect):
@@ -124,6 +126,34 @@ def remove_html_markup(s):
     return out
 
 
+latin_letters = {}
+symbols = (u"абвгдеёзийклмнопрстуфхъыьэАБВГДЕЁЗИЙКЛМНОПРСТУФХЪЫЬЭ",
+           u"abvgdeezijklmnoprstufh'y'eABVGDEEZIJKLMNOPRSTUFH'Y'E")
+#tr = {ord(a): ord(b) for a, b in zip(*symbols)}
+tr = dict()
+#moving to python 2.7.3
+for a in zip(*symbols):
+    for b in zip(*symbols):
+        tr.update({ord(a[0]): ord(b[1])})
+
+
+def cyrillic2latin(input):
+    return input.translate(tr)
+
+
+def is_latin(uchr):
+    try:
+        return latin_letters[uchr]
+    except KeyError:
+        return latin_letters.setdefault(uchr, 'LATIN' in unicodedata.name(uchr))
+
+
+def only_roman_chars(unistr):
+    return all(is_latin(uchr)
+               for uchr in unistr
+               if uchr.isalpha())  # isalpha suggested by John Machin
+
+
 def descr_user(s):
     if s in persist_users:
         if persist_users[s] is None:
@@ -157,8 +187,12 @@ def descr_user(s):
             #my_browser.form.set_handle_refresh(False)  # can sometimes hang without this
             #ctl00_TextBoxName
             control = my_browser.form.find_control("ctl00$TextBoxName")
-            control.value = first_name
-            control.text = first_name
+            if only_roman_chars(first_name):
+                control.value = first_name.decode('utf-8')
+            else:
+                control.value = cyrillic2latin(first_name).decode('utf-8')
+            #check if value is enough
+            #control.text = first_name
             response = my_browser.submit()
             html = response.read()
             local_soup = BeautifulSoup(html)
@@ -167,7 +201,7 @@ def descr_user(s):
                 persist_users[s] = s + ',' + fullname.strip()
                 return s + ',' + fullname.strip()
             gender = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelGenderFound"}).contents[0].string
-            print gender
+            #print gender
             persist_users[s] = s + ',' + fullname.strip() + ',' + gender
             return s + ',' + fullname.strip() + ',' + gender
         else:
@@ -269,14 +303,14 @@ if __name__ == "__main__":
                                     for s in sentence:
                                         tag = str(s).strip()
                                         if ( (len(tag) > 1) and (tag != 'None')):
-                                            result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
+                                            result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
                                 email_search = candidate.find("div", {"class": "comment-body markdown-body email-format js-comment-body"})
                                 if email_search is not None:
                                     sentence = email_search.contents[1:-1]
                                     for s in sentence:
                                         tag = str(s).strip()
                                         if ( (len(tag) > 1) and (tag != 'None')):
-                                            result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
+                                            result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
                         result_txt_file.close()
 
                     hexi = hashlib.md5(open(filename + '.txt').read()).hexdigest()
