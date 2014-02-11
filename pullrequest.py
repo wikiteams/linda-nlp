@@ -21,6 +21,7 @@ import sys
 import urllib
 import simplejson
 import hashlib
+import mechanize
 from bs4 import BeautifulSoup
 
 
@@ -123,9 +124,55 @@ def remove_html_markup(s):
     return out
 
 
+def descr_user(s):
+    if s in persist_users:
+        if persist_users[s] is None:
+            return s
+        else:
+            return persist_users[s]
+    #get user name and surname here
+    response = urllib.urlopen('https://api.github.com/users/' + s
+                              + '?client_id='
+                              + client_id + '&client_secret='
+                              + client_secret)
+    data = json.load(response)
+    fullname = data['name']
+    if (len(fullname) > 0):
+        first_name = fullname.split()[0]
+        if (len(first_name) > 0):
+            #ask now internet for gender
+            response = my_browser.open('http://genderchecker.com/')
+            response.read()
+            my_browser.select_form("aspnetForm")
+            #ctl00_TextBoxName
+            control = my_browser.form.find_control("ctl00_TextBoxName")
+            control.value = first_name
+            control.text = first_name
+            response = my_browser.submit()
+            html = response.read()
+            local_soup = BeautifulSoup(html)
+            gender = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelGenderFound"}).contents[0]
+            persist_users[s] = s + ',' + fullname.strip() + ',' + gender
+            return s + ',' + fullname.strip() + ',' + gender
+        else:
+            persist_users[s] = s + ',' + fullname.strip()
+            return s + ',' + fullname.strip()
+    else:
+        print 'fullname not provided'
+        persist_users[s] = None
+        return s
+
+
 if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say(version_name)
+
+    #initialize browser for the gender studies :)
+    my_browser = mechanize.Browser()
+    my_browser.set_all_readonly(False)    # allow everything to be written to
+    my_browser.set_handle_robots(False)   # ignore robots
+    my_browser.set_handle_refresh(False)  # can sometimes hang without this
+    #end
 
     if len(sys.argv) < 3:
         print 'OAuth id and/or secret missing, '
@@ -180,8 +227,8 @@ if __name__ == "__main__":
                             #github changed to a new tag:
                             discussion_initiator = soup.find("a", {
                                 "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
-                            result_txt_file.write(u'-[' + discussion_initiator + u']' + os.linesep)
-                            result_txt_file.write(u'[' + discussion_title + u']' + os.linesep)
+                            result_txt_file.write(u'-[' + descr_user(discussion_initiator) + u']' + os.linesep)
+                            result_txt_file.write(u'[' + discussion_title + u']' + os.linesep + os.linesep)
                             #first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
                             #result_txt_file.write(unicode(first_sentence) + os.linesep)
                             #in new discussion layout there is no need to parse seperatly "first sentence"
@@ -199,7 +246,7 @@ if __name__ == "__main__":
                                     #result_txt_file.write(os.linesep)
                             for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
                                 author = candidate.find("a", {"class": "author"}).contents[0]
-                                result_txt_file.write(u'-[' + author + u']' + os.linesep)
+                                result_txt_file.write(u'-[' + descr_user(author) + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
                                     sentence = sentence_search.contents[1:-1]
