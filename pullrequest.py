@@ -135,8 +135,16 @@ def descr_user(s):
                               + '?client_id='
                               + client_id + '&client_secret='
                               + client_secret)
-    data = json.load(response)
-    fullname = data['name']
+    #print response
+    data = simplejson.load(response)
+    #print data
+    #fullname = data['name']
+    if 'name' in data:
+        fullname = data['name']
+    else:
+        #print 'fullname not provided'
+        persist_users[s] = None
+        return s
     if (len(fullname) > 0):
         first_name = fullname.split()[0]
         if (len(first_name) > 0):
@@ -144,21 +152,25 @@ def descr_user(s):
             response = my_browser.open('http://genderchecker.com/')
             response.read()
             my_browser.select_form("aspnetForm")
+            my_browser.form.set_all_readonly(False)    # allow everything to be written to
+            #my_browser.form.set_handle_robots(False)   # ignore robots
+            #my_browser.form.set_handle_refresh(False)  # can sometimes hang without this
             #ctl00_TextBoxName
-            control = my_browser.form.find_control("ctl00_TextBoxName")
+            control = my_browser.form.find_control("ctl00$TextBoxName")
             control.value = first_name
             control.text = first_name
             response = my_browser.submit()
             html = response.read()
             local_soup = BeautifulSoup(html)
-            gender = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelGenderFound"}).contents[0]
+            gender = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelGenderFound"}).contents[0].string
+            #print gender
             persist_users[s] = s + ',' + fullname.strip() + ',' + gender
             return s + ',' + fullname.strip() + ',' + gender
         else:
             persist_users[s] = s + ',' + fullname.strip()
             return s + ',' + fullname.strip()
     else:
-        print 'fullname not provided'
+        #print 'fullname not provided'
         persist_users[s] = None
         return s
 
@@ -169,7 +181,7 @@ if __name__ == "__main__":
 
     #initialize browser for the gender studies :)
     my_browser = mechanize.Browser()
-    my_browser.set_all_readonly(False)    # allow everything to be written to
+    #my_browser.set_all_readonly(False)    # allow everything to be written to
     my_browser.set_handle_robots(False)   # ignore robots
     my_browser.set_handle_refresh(False)  # can sometimes hang without this
     #end
