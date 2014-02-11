@@ -176,7 +176,7 @@ def descr_user(s):
         persist_users[s] = None
         return s
     if (len(fullname) > 0):
-        first_name = fullname.split()[0]
+        first_name = unicode(fullname.split()[0])
         if (len(first_name) > 0):
             #ask now internet for gender
             response = my_browser.open('http://genderchecker.com/')
@@ -277,7 +277,7 @@ if __name__ == "__main__":
                             #github changed to a new tag:
                             discussion_initiator = soup.find("a", {
                                 "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
-                            result_txt_file.write(u'-[' + descr_user(discussion_initiator) + u']' + os.linesep)
+                            result_txt_file.write(u'-[' + descr_user(unicode(discussion_initiator)) + u']' + os.linesep)
                             result_txt_file.write(u'[' + discussion_title + u']' + os.linesep + os.linesep)
                             #first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
                             #result_txt_file.write(unicode(first_sentence) + os.linesep)
@@ -296,7 +296,7 @@ if __name__ == "__main__":
                                     #result_txt_file.write(os.linesep)
                             for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
                                 author = candidate.find("a", {"class": "author"}).contents[0]
-                                result_txt_file.write(u'-[' + descr_user(author) + u']' + os.linesep)
+                                result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
                                     sentence = sentence_search.contents[1:-1]
