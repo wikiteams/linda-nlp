@@ -162,8 +162,12 @@ def descr_user(s):
             response = my_browser.submit()
             html = response.read()
             local_soup = BeautifulSoup(html)
+            failed = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelFailedSearchedFor"})
+            if failed is not None:
+                persist_users[s] = s + ',' + fullname.strip()
+                return s + ',' + fullname.strip()
             gender = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelGenderFound"}).contents[0].string
-            #print gender
+            print gender
             persist_users[s] = s + ',' + fullname.strip() + ',' + gender
             return s + ',' + fullname.strip() + ',' + gender
         else:
