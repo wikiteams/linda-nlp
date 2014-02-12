@@ -275,6 +275,23 @@ if __name__ == "__main__":
                             #discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
                             #github changed to a new tag:
                             title_h1 = soup.find("h1", {"class": "gh-header-title"})
+                            time = 60
+                            if title_h1 is None:
+                                #retry 3 times
+                                for i in range(0,3):
+                                    time.sleep(time)
+                                    time *= 3
+                                    local_filename_html, headers_html = urllib.urlretrieve(
+                                        html_addr, filename + '.html')
+                                    soup = BeautifulSoup(html_content_file)
+                                    title_h1 = soup.find("h1", {"class": "gh-header-title"})
+                                    if title_h1 is not None:
+                                        break
+                            if title_h1 is None:
+                                #nothing to do here, lets move on
+                                print 'orphaned' + filename + '.json'
+                                print filename + '.json' + 'is without proper html. GitHub not responding or giving 404/501 erorr ??'
+                                continue
                             discussion_title = title_h1.find("span", {"class": "js-issue-title"}).contents[0] + title_h1.find(
                                 "span", {"class": "gh-header-number"}).contents[0]
                             #discussion_initiator = soup.find("span", {"class": "discussion-topic-author"}).contents[0].contents[0]
