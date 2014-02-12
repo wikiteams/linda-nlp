@@ -175,6 +175,10 @@ def descr_user(s):
         #print 'fullname not provided'
         persist_users[s] = None
         return s
+    if fullname is None:
+        #print 'fullname provided but an empty entry'
+        persist_users[s] = None
+        return s
     if (len(fullname) > 0):
         first_name = unicode(fullname.split()[0])
         if (len(first_name) > 0):
@@ -188,9 +192,9 @@ def descr_user(s):
             #ctl00_TextBoxName
             control = my_browser.form.find_control("ctl00$TextBoxName")
             if only_roman_chars(first_name):
-                control.value = first_name.decode('utf-8')
+                control.value = first_name.encode('utf-8')
             else:
-                control.value = cyrillic2latin(first_name).decode('utf-8')
+                control.value = cyrillic2latin(first_name).encode('utf-8')
             #check if value is enough
             #control.text = first_name
             response = my_browser.submit()
