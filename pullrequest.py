@@ -283,9 +283,22 @@ if __name__ == "__main__":
 
             filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
 
-            local_filename, headers = urllib.urlretrieve(key + '?client_id='
-                                                         + client_id + '&client_secret='
-                                                         + client_secret, filename + '.json')
+            json_timeout = 60
+            while True:
+                try:
+                    local_filename, headers = urllib.urlretrieve(key + '?client_id='
+                                                                 + client_id + '&client_secret='
+                                                                 + client_secret, filename + '.json')
+                    break
+                except IOError:
+                    print 'Error retrieving data from GitHub API. Socket error / timeout. Retry after ' + str(json_timeout) + ' s.'
+                    time.sleep(json_timeout)
+                    json_timeout *= 2
+                except:
+                    print 'Error retrieving data from GitHub API. Unknown error. Retry after ' + str(json_timeout) + ' s.'
+                    time.sleep(json_timeout)
+                    json_timeout *= 2
+
 
             with open(local_filename, 'r') as content_file:
                 json = simplejson.load(content_file)
