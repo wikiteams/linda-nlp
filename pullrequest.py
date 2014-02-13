@@ -229,7 +229,7 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
     how_long = 60
     if gotten_tag is None:
         #retry 3 times
-        for i in range(0,3):
+        for i in range(0, 3):
             time.sleep(how_long)
             how_long *= 3
             local_filename_html, headers_html = urllib.urlretrieve(
@@ -289,7 +289,23 @@ if __name__ == "__main__":
 
             with open(local_filename, 'r') as content_file:
                 json = simplejson.load(content_file)
-                if (len(json) < 3) and (json['message'] == 'Not Found'):
+                #print json
+                rr = 3
+                if (len(json) < 2):
+                    while rr > 0:
+                        print 'JSON retrieved to small! Retrying ' + str(rr) + ' more times.'
+                        rr -= 1
+                        time.sleep(60)
+                        json = simplejson.load(key + '?client_id='
+                                               + client_id + '&client_secret='
+                                               + client_secret)
+                        if (len(json) >= 2):
+                            # successfuly got a longer JSON, move on to next elif
+                            break;
+                if (len(json) < 2):
+                    #check again, if JSON still small than actually od nothing
+                    print 'JSON retrieved to small, pullrequest won\'t be processed'
+                elif ('message' in json) and (json['message'] == 'Not Found'):
                     print 'Pull request dont exist anymore'
                 else:
                     html_addr = json['html_url']
