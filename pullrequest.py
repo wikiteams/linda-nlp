@@ -20,9 +20,11 @@ import cStringIO
 import os
 import sys
 import urllib
+import urllib2
 import simplejson
 import hashlib
 import mechanize
+import time
 from bs4 import BeautifulSoup
 import unicodedata
 
@@ -183,8 +185,14 @@ def descr_user(s):
         first_name = unicode(fullname.split()[0])
         if (len(first_name) > 0):
             #ask now internet for gender
-            response = my_browser.open('http://genderchecker.com/')
-            response.read()
+            while True:
+                try:
+                    response = my_browser.open('http://genderchecker.com/')
+                    response.read()
+                    break
+                except urllib2.URLError:
+                    print 'Site genderchecker.com seems to be down. awaiting for 60s before retry'
+                    time.sleep(60)
             my_browser.select_form("aspnetForm")
             my_browser.form.set_all_readonly(False)    # allow everything to be written to
             #my_browser.form.set_handle_robots(False)   # ignore robots
@@ -216,6 +224,26 @@ def descr_user(s):
         persist_users[s] = None
         return s
 
+
+def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
+    how_long = 60
+    if gotten_tag is None:
+        #retry 3 times
+        for i in range(0,3):
+            time.sleep(how_long)
+            how_long *= 3
+            local_filename_html, headers_html = urllib.urlretrieve(
+                html_addr, filename + '.html')
+            soup = BeautifulSoup(html_content_file)
+            gotten_tag = soup.find(tagname, {objectname: arg_objectname})
+            if gotten_tag is not None:
+                break
+        if gotten_tag is None:
+            #nothing to do here, lets move on
+            print 'orphaned' + filename + '.json'
+            print filename + '.json' + 'is without proper html. GitHub not responding or giving 404/501 erorr ??'
+            return None
+    return gotten_tag
 
 if __name__ == "__main__":
     scream.say('Start main execution')
@@ -275,22 +303,8 @@ if __name__ == "__main__":
                             #discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
                             #github changed to a new tag:
                             title_h1 = soup.find("h1", {"class": "gh-header-title"})
-                            time = 60
+                            title_h1 = retry_if_neccessary(title_h1, "h1", "class", "gh-header-title")
                             if title_h1 is None:
-                                #retry 3 times
-                                for i in range(0,3):
-                                    time.sleep(time)
-                                    time *= 3
-                                    local_filename_html, headers_html = urllib.urlretrieve(
-                                        html_addr, filename + '.html')
-                                    soup = BeautifulSoup(html_content_file)
-                                    title_h1 = soup.find("h1", {"class": "gh-header-title"})
-                                    if title_h1 is not None:
-                                        break
-                            if title_h1 is None:
-                                #nothing to do here, lets move on
-                                print 'orphaned' + filename + '.json'
-                                print filename + '.json' + 'is without proper html. GitHub not responding or giving 404/501 erorr ??'
                                 continue
                             discussion_title = title_h1.find("span", {"class": "js-issue-title"}).contents[0] + title_h1.find(
                                 "span", {"class": "gh-header-number"}).contents[0]
@@ -317,6 +331,9 @@ if __name__ == "__main__":
                                     #result_txt_file.write(os.linesep)
                             for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
                                 author = candidate.find("a", {"class": "author"}).contents[0]
+                                author = retry_if_neccessary(author, "a", "class", "author")
+                                if author is None:
+                                    continue
                                 result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
