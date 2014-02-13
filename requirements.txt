@@ -1,2 +1,3 @@
 simplejson
 beautifulsoup4
+mechanize
