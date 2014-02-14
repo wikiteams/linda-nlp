@@ -75,7 +75,15 @@ order by repository_url
 
 **Expected result**
 
-.JSON files, .TXT files (ready to be annotated by Brat), and .HTML files (i.e. with pull request content)
+.JSON files, .TXT files (ready to be annotated by Brat), and .HTML files (i.e. with pull request content), finally - .LANG files with a prediction of langue used in a particular .TXT file
+
+Third parties
+
+We use langid.py (https://github.com/saffsd/langid.py) to guess a language used in the dialogues.
+
+Requirements
+
+Please check requirements.txt file for modules used in the program. Virtualenv compatible (won't require compiling external libraries etc.).
 
 Acknowledgment
 
