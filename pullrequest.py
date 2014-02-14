@@ -359,10 +359,12 @@ if __name__ == "__main__":
                             #                result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
                                     #result_txt_file.write(os.linesep)
                             for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
-                                author = candidate.find("a", {"class": "author"}).contents[0]
+                                author = candidate.find("a", {"class": "author"})
                                 author = retry_if_neccessary(author, "a", "class", "author")
                                 if author is None:
                                     continue
+                                else:
+                                    author = author.contents[0]    
                                 result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
