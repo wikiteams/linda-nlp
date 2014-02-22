@@ -49,6 +49,12 @@ or unix nohup version
 nohup python pullrequest.py client_oath_id client_secret > logs.txt &
 ```
 
+if you need to resume from a step, add additional argument at pos 3:
+
+```
+nohup python pullrequest.py client_oath_id client_secret pull#repoowner#reponame#pullnumber > logs.txt &
+```
+
 Be advised, that GitHub quota mechanism may apply and cut you from downloading through urllib and API.
 
 **Required data**

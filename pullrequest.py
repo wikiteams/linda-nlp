@@ -4,13 +4,13 @@ Downloads more details about dialogues happening in GitHub.
 Now (from version 1.1) includes new GitHub discussion layout
 (which changed around 01/02.2014)
 
-@version 1.1
+@version 1.2
 @author Oskar Jarczyk
 @since 1.0
-@update 06.02.2014
+@update 22.02.2014
 '''
 
-version_name = 'version 1.1 codename: Sonic'
+version_name = 'version 1.2 codename: Thorne–Zytkow'
 pull_request_filename = 'comments_on_github_2013.csv'
 
 import csv
@@ -147,7 +147,8 @@ def is_latin(uchr):
     try:
         return latin_letters[uchr]
     except KeyError:
-        return latin_letters.setdefault(uchr, 'LATIN' in unicodedata.name(uchr))
+        return latin_letters.setdefault(uchr,
+                                        'LATIN' in unicodedata.name(uchr))
 
 
 def only_roman_chars(unistr):
@@ -191,13 +192,13 @@ def descr_user(s):
                     response.read()
                     break
                 except urllib2.URLError:
-                    print 'Site genderchecker.com seems to be down. awaiting for 60s before retry'
+                    print ('Site genderchecker.com seems to be down' +
+                           '. awaiting for 60s before retry')
                     time.sleep(60)
             my_browser.select_form("aspnetForm")
-            my_browser.form.set_all_readonly(False)    # allow everything to be written to
-            #my_browser.form.set_handle_robots(False)   # ignore robots
-            #my_browser.form.set_handle_refresh(False)  # can sometimes hang without this
-            #ctl00_TextBoxName
+            my_browser.form.set_all_readonly(False)
+            # allow everything to be written
+
             control = my_browser.form.find_control("ctl00$TextBoxName")
             if only_roman_chars(first_name):
                 control.value = first_name.encode('utf-8')
@@ -205,14 +206,33 @@ def descr_user(s):
                 control.value = cyrillic2latin(first_name).encode('utf-8')
             #check if value is enough
             #control.text = first_name
-            response = my_browser.submit()
-            html = response.read()
+            submit_retry_counter = 4
+            while True:
+                try:
+                    response = my_browser.submit()
+                    html = response.read()
+                    break
+                except mechanize.HTTPError, e:
+                    submit_retry_counter -= 1
+                    if submit_retry_counter < 1:
+                        break
+                    error_message = 'Site genderchecker.com seems to have internal problems'
+                    + '. or my request is wibbly-wobbly nonsense. awaiting for 60s before retry'
+                    print(error_message)
+                    scream.log_error(e.code + ': ' + error_message)
+                    time.sleep(60)
             local_soup = BeautifulSoup(html)
-            failed = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelFailedSearchedFor"})
+            failed = local_soup.find("span",
+                                     {"id":
+                                      "ctl00_ContentPlaceHolder1_" +
+                                      "LabelFailedSearchedFor"})
             if failed is not None:
                 persist_users[s] = s + ',' + fullname.strip()
                 return s + ',' + fullname.strip()
-            gender = local_soup.find("span", {"id": "ctl00_ContentPlaceHolder1_LabelGenderFound"}).contents[0].string
+            gender = local_soup.find("span",
+                                     {"id":
+                                      "ctl00_ContentPlaceHolder1_" +
+                                      "LabelGenderFound"}).contents[0].string
             #print gender
             persist_users[s] = s + ',' + fullname.strip() + ',' + gender
             return s + ',' + fullname.strip() + ',' + gender
@@ -241,7 +261,8 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
         if gotten_tag is None:
             #nothing to do here, lets move on
             print 'orphaned' + filename + '.json'
-            print filename + '.json' + 'is without proper html. GitHub not responding or giving 404/501 erorr ??'
+            print (filename + '.json' + 'is without proper html. ' +
+                   'GitHub not responding or giving 404/501 erorr ??')
             return None
     return gotten_tag
 
@@ -256,10 +277,17 @@ if __name__ == "__main__":
     my_browser.set_handle_refresh(False)  # can sometimes hang without this
     #end
 
+    resume_from_entity = None
+
     if len(sys.argv) < 3:
         print 'OAuth id and/or secret missing, '
         + 'please lunch program with credentials as arguments'
         exit(-1)
+    if len(sys.argv) > 4:
+        print 'Too many arguments provided. Check manual and try again'
+        exit(-1)
+    if len(sys.argv) == 4:
+        resume_from_entity = sys.argv[3]
 
     print 'using: ' + sys.argv[1]
 
@@ -282,6 +310,11 @@ if __name__ == "__main__":
             pullnumber = key.split('/')[8]
 
             filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
+            if resume_from_entity is not None:
+                if filename == resume_from_entity:
+                    print 'Found! Resuming work.'
+                else:
+                    continue
 
             json_timeout = 60
             while True:
@@ -299,7 +332,6 @@ if __name__ == "__main__":
                     time.sleep(json_timeout)
                     json_timeout *= 2
 
-
             with open(local_filename, 'r') as content_file:
                 json = simplejson.load(content_file)
                 #print json
@@ -314,7 +346,7 @@ if __name__ == "__main__":
                                                + client_secret)
                         if (len(json) >= 2):
                             # successfuly got a longer JSON, move on to next elif
-                            break;
+                            break
                 if (len(json) < 2):
                     #check again, if JSON still small than actually od nothing
                     print 'JSON retrieved to small, pullrequest won\'t be processed'
@@ -364,21 +396,21 @@ if __name__ == "__main__":
                                 if author is None:
                                     continue
                                 else:
-                                    author = author.contents[0]    
+                                    author = author.contents[0]
                                 result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
                                     sentence = sentence_search.contents[1:-1]
                                     for s in sentence:
                                         tag = str(s).strip()
-                                        if ( (len(tag) > 1) and (tag != 'None')):
+                                        if ((len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
                                 email_search = candidate.find("div", {"class": "comment-body markdown-body email-format js-comment-body"})
                                 if email_search is not None:
                                     sentence = email_search.contents[1:-1]
                                     for s in sentence:
                                         tag = str(s).strip()
-                                        if ( (len(tag) > 1) and (tag != 'None')):
+                                        if ((len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
                         result_txt_file.close()
 
