@@ -391,6 +391,7 @@ if __name__ == "__main__":
                                     continue
                                 else:
                                     author = author.contents[0]
+                                scream.say('Describing user: ' + author + ' unicode: ' + unicode(author))
                                 result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
