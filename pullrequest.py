@@ -15,6 +15,7 @@ pull_request_filename = 'comments_on_github_2013.csv'
 
 import csv
 import scream
+import logmissed
 import codecs
 import cStringIO
 import os
@@ -287,7 +288,7 @@ if __name__ == "__main__":
         print 'Too many arguments provided. Check manual and try again'
         exit(-1)
     if len(sys.argv) == 4:
-        resume_from_entity = sys.argv[3]
+        resume_from_entity = sys.argv[3].strip()
 
     print 'using: ' + sys.argv[1]
 
@@ -302,17 +303,26 @@ if __name__ == "__main__":
         reposReader = UnicodeReader(source_csvfile)
         reposReader.next()
         for row in reposReader:
-            key = str(row[10])
+            try:
+                key = str(row[10])
+            except IndexError:
+                print 'IndexError when processing key:'
+                logmissed.error(row)
+                continue
             print 'Working on comment ' + key
 
-            repoowner = str(row[7])
+            commentator = str(row[7])
+            repoowner = key.split('/')[4]
             reponame = key.split('/')[5]
             pullnumber = key.split('/')[8]
 
             filename = 'pull' + '#' + repoowner + '#' + reponame + '#' + pullnumber
+
             if resume_from_entity is not None:
                 if filename == resume_from_entity:
                     print 'Found! Resuming work.'
+                    print pullnumber
+                    resume_from_entity = None
                 else:
                     continue
 
