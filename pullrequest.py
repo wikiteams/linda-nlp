@@ -10,7 +10,7 @@ Now (from version 1.1) includes new GitHub discussion layout
 @update 22.02.2014
 '''
 
-version_name = 'version 1.2 codename: Thorne–Zytkow'
+version_name = 'version 1.2 codename: Thorne-Zytkow'
 pull_request_filename = 'comments_on_github_2013.csv'
 
 import csv
@@ -219,7 +219,7 @@ def descr_user(s):
                         break
                     error_message = 'Site genderchecker.com seems to have internal problems'
                     + '. or my request is wibbly-wobbly nonsense. awaiting for 60s before retry'
-                    print(error_message)
+                    scream.say(error_message)
                     scream.log_error(e.code + ': ' + error_message)
                     time.sleep(60)
             local_soup = BeautifulSoup(html)
@@ -261,9 +261,9 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
                 break
         if gotten_tag is None:
             #nothing to do here, lets move on
-            print 'orphaned' + filename + '.json'
-            print (filename + '.json' + 'is without proper html. ' +
-                   'GitHub not responding or giving 404/501 erorr ??')
+            scream.say('orphaned' + filename + '.json')
+            scream.say(filename + '.json' + 'is without proper html. ' +
+                       'GitHub not responding or giving 404/501 erorr ??')
             return None
     return gotten_tag
 
@@ -281,16 +281,16 @@ if __name__ == "__main__":
     resume_from_entity = None
 
     if len(sys.argv) < 3:
-        print 'OAuth id and/or secret missing, '
-        + 'please lunch program with credentials as arguments'
+        scream.say('OAuth id and/or secret missing, '
+                   + 'please lunch program with credentials as arguments')
         exit(-1)
     if len(sys.argv) > 4:
-        print 'Too many arguments provided. Check manual and try again'
+        scream.say('Too many arguments provided. Check manual and try again')
         exit(-1)
     if len(sys.argv) == 4:
         resume_from_entity = sys.argv[3].strip()
 
-    print 'using: ' + sys.argv[1]
+    scream.say('using: ' + sys.argv[1])
 
     # This information is obtained upon registration of a new GitHub
     client_id = sys.argv[1]
@@ -309,7 +309,7 @@ if __name__ == "__main__":
                 print 'IndexError when processing key:'
                 logmissed.error(row)
                 continue
-            print 'Working on comment ' + key
+            scream.say('Working on comment ' + key)
 
             commentator = str(row[7])
             repoowner = key.split('/')[4]
@@ -320,8 +320,8 @@ if __name__ == "__main__":
 
             if resume_from_entity is not None:
                 if filename == resume_from_entity:
-                    print 'Found! Resuming work.'
-                    print pullnumber
+                    scream.say('Found! Resuming work.')
+                    scream.say(pullnumber)
                     resume_from_entity = None
                 else:
                     continue
@@ -334,11 +334,11 @@ if __name__ == "__main__":
                                                                  + client_secret, filename + '.json')
                     break
                 except IOError:
-                    print 'Error retrieving data from GitHub API. Socket error / timeout. Retry after ' + str(json_timeout) + ' s.'
+                    scream.ssay('Error retrieving data from GitHub API. Socket error / timeout. Retry after ' + str(json_timeout) + ' s.')
                     time.sleep(json_timeout)
                     json_timeout *= 2
                 except:
-                    print 'Error retrieving data from GitHub API. Unknown error. Retry after ' + str(json_timeout) + ' s.'
+                    scream.ssay('Error retrieving data from GitHub API. Unknown error. Retry after ' + str(json_timeout) + ' s.')
                     time.sleep(json_timeout)
                     json_timeout *= 2
 
@@ -348,7 +348,7 @@ if __name__ == "__main__":
                 rr = 3
                 if (len(json) < 2):
                     while rr > 0:
-                        print 'JSON retrieved to small! Retrying ' + str(rr) + ' more times.'
+                        scream.say('JSON retrieved to small! Retrying ' + str(rr) + ' more times.')
                         rr -= 1
                         time.sleep(60)
                         json = simplejson.load(key + '?client_id='
@@ -359,19 +359,18 @@ if __name__ == "__main__":
                             break
                 if (len(json) < 2):
                     #check again, if JSON still small than actually od nothing
-                    print 'JSON retrieved to small, pullrequest won\'t be processed'
+                    scream.say('JSON retrieved to small, pullrequest won\'t be processed')
                 elif ('message' in json) and (json['message'] == 'Not Found'):
-                    print 'Pull request dont exist anymore'
+                    scream.say('Pull request dont exist anymore')
                 else:
                     html_addr = json['html_url']
                     local_filename_html, headers_html = urllib.urlretrieve(
                         html_addr, filename + '.html')
                     # btw, whats the html result code here ?
-                    print 'File downloaded, lets get to scrapping dialogues from there..'
+                    scream.say('File downloaded, lets get to scrapping dialogues from there..')
                     with codecs.open(filename + '.txt', 'wb', 'utf-8') as result_txt_file:
                         with open(local_filename_html, 'r') as html_content_file:
                             soup = BeautifulSoup(html_content_file)
-                            #discussion_title = soup.find("h2", {"class": "discussion-topic-title js-comment-body-title"}).contents[0]
                             #github changed to a new tag:
                             title_h1 = soup.find("h1", {"class": "gh-header-title"})
                             title_h1 = retry_if_neccessary(title_h1, "h1", "class", "gh-header-title")
@@ -379,27 +378,12 @@ if __name__ == "__main__":
                                 continue
                             discussion_title = title_h1.find("span", {"class": "js-issue-title"}).contents[0] + title_h1.find(
                                 "span", {"class": "gh-header-number"}).contents[0]
-                            #discussion_initiator = soup.find("span", {"class": "discussion-topic-author"}).contents[0].contents[0]
                             #github changed to a new tag:
                             discussion_initiator = soup.find("a", {
                                 "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
                             result_txt_file.write(u'-[' + descr_user(unicode(discussion_initiator)) + u']' + os.linesep)
                             result_txt_file.write(u'[' + discussion_title + u']' + os.linesep + os.linesep)
-                            #first_sentence = soup.findAll("div", {"class": "js-comment-body comment-body markdown-body markdown-format"})[0].contents[1]
-                            #result_txt_file.write(unicode(first_sentence) + os.linesep)
-                            #in new discussion layout there is no need to parse seperatly "first sentence"
-                            #for candidate in soup.findAll("div", {"class": "timeline-comment timeline-comment-"}):
-                            #    result_txt_file.write(os.linesep)
-                            #    author = candidate.find("a", {"class": "author"}).contents[0]
-                            #    result_txt_file.write(u'-[' + author + u']' + os.linesep)
-                            #    sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
-                            #    if sentence_search is not None:
-                            #        sentence = sentence_search.contents[1:-1]
-                            #        for s in sentence:
-                            #            tag = str(s).strip()
-                            #            if ( (len(tag) > 1) and (tag != 'None')):
-                            #                result_txt_file.write(unicode(remove_html_markup(tag).decode('utf-8')) + os.linesep)
-                                    #result_txt_file.write(os.linesep)
+
                             for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
                                 author = candidate.find("a", {"class": "author"})
                                 author = retry_if_neccessary(author, "a", "class", "author")
@@ -426,10 +410,10 @@ if __name__ == "__main__":
 
                     hexi = hashlib.md5(open(filename + '.txt').read()).hexdigest()
                     if hexi in persist_md5:
-                        print 'Duplicated!'
+                        scream.say('Duplicated!')
                         os.remove(filename + '.txt')
                     else:
-                        print 'A new dialog confirmed.'
+                        scream.say('A new dialog confirmed.')
                         persist_md5[hexi] = filename + '.txt'
 
-            print 'Moving next'
+            scream.say('Moving next')

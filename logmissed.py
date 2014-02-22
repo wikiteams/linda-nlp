@@ -2,6 +2,7 @@ import sys
 import logging
 import logging.handlers
 import logging.config
+import datetime
 
 DISABLE__STD = False
 
@@ -23,22 +24,25 @@ def say(s):
 
 def ssay(s):
     if intelliDialogue_verbose:
-        print s
+        print datetime.datetime.now() + ': ' + s
         logger.info(s)
 
 
 def log_error(s):
     if intelliDialogue_verbose:
+        print datetime.datetime.now() + ': ' + s
         logger.error(s)
 
 
 def log_warning(s):
     if intelliDialogue_verbose:
+        print datetime.datetime.now() + ': ' + s
         logger.warning(s)
 
 
 def log_debug(s):
     if intelliDialogue_verbose:
+        print datetime.datetime.now() + ': ' + s
         logger.debug(s)
 
 
