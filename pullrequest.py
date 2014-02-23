@@ -246,6 +246,8 @@ def descr_user(s):
         return s
 
 
+# This method tries to get HTML discussion site again again when there is a problem with finding by th BS
+# proper html tags which allways indicate author or discussion content - a must content to exist
 def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
     how_long = 60
     if gotten_tag is None:
@@ -253,17 +255,27 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
         for i in range(0, 3):
             time.sleep(how_long)
             how_long *= 3
-            local_filename_html, headers_html = urllib.urlretrieve(
-                html_addr, filename + '.html')
+
+            while True:
+                try:
+                    local_filename_html, headers_html = urllib.urlretrieve(
+                        html_addr, filename + '.html')
+                    break
+                except IOError:
+                    io_socket_message = 'Socket error while retrieving HTML file from GitHub! Internet or GitHub down? Retry after 1 minute'
+                    scream.ssay(io_socket_message)
+                    scream.log_warning(io_socket_message)
+                    time.sleep(60)
+
             soup = BeautifulSoup(html_content_file)
             gotten_tag = soup.find(tagname, {objectname: arg_objectname})
             if gotten_tag is not None:
                 break
         if gotten_tag is None:
             #nothing to do here, lets move on
-            scream.say('orphaned' + filename + '.json')
-            scream.say(filename + '.json' + 'is without proper html. ' +
-                       'GitHub not responding or giving 404/501 erorr ??')
+            scream.ssay('orphaned' + filename + '.json')
+            scream.log_error(filename + '.json' + 'is without proper html. ' +
+                             'GitHub not responding or giving 404/501 erorr ??')
             return None
     return gotten_tag
 
