@@ -158,6 +158,10 @@ def only_roman_chars(unistr):
                if uchr.isalpha())  # isalpha suggested by John Machin
 
 
+def StripNonAlpha(s):
+    return "".join(c for c in s if c.isalpha())
+
+
 def descr_user(s):
     if s in persist_users:
         if persist_users[s] is None:
@@ -203,9 +207,9 @@ def descr_user(s):
 
             control = my_browser.form.find_control("ctl00$TextBoxName")
             if only_roman_chars(first_name):
-                control.value = first_name.encode('utf-8')
+                control.value = StripNonAlpha(first_name.encode('utf-8'))
             else:
-                control.value = cyrillic2latin(first_name).encode('utf-8')
+                control.value = StripNonAlpha(cyrillic2latin(first_name).encode('utf-8'))
             #check if value is enough
             #control.text = first_name
             scream.say('Control value is set to :' + str(control.value))
@@ -220,9 +224,18 @@ def descr_user(s):
                     if submit_retry_counter < 1:
                         break
                     error_message = 'Site genderchecker.com seems to have internal problems. or my request is' +\
-                        ' wibbly-wobbly nonsense. awaiting for 60s before retry'
+                        ' wibbly-wobbly nonsense. HTTPError ' + str(e.code) + '. awaiting for 60s before retry'
                     scream.say(error_message)
                     scream.log_error(str(e.code) + ': ' + error_message)
+                    time.sleep(60)
+                except:
+                    submit_retry_counter -= 1
+                    if submit_retry_counter < 1:
+                        break
+                    error_message = 'Site genderchecker.com seems to have internal problems. or my request is' +\
+                        ' wibbly-wobbly nonsense. awaiting for 60s before retry'
+                    scream.say(error_message)
+                    scream.log_error(error_message)
                     time.sleep(60)
             local_soup = BeautifulSoup(html)
             failed = local_soup.find("span",
