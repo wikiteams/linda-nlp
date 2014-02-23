@@ -57,7 +57,7 @@ nohup python pullrequest.py client_oath_id client_secret pull#repoowner#reponame
 
 Be advised, that GitHub quota mechanism may apply and cut you from downloading through urllib and API.
 
-PS: You can run Python with the -u flag to *avoid output buffering*
+PS: You can run Python with the **-u flag** to avoid output buffering
 
 **Required data**
 
@@ -87,11 +87,18 @@ order by repository_url
 
 Third parties
 
+We utilize GitHub API and HTML resources.
 We use langid.py (https://github.com/saffsd/langid.py) to guess a language used in the dialogues.
+We use the genderchecker.com portal to ask about the gender of a GitHub user, basing on the name (optionally provided by the person).
 
 Requirements
 
 Please check requirements.txt file for modules used in the program. Virtualenv compatible (won't require compiling external libraries etc.).
+
+Other info
+
+If using this dataset and/or tool, please give a reference url and mention (Oskar Jarczyk, 2014) in your paper
+yet .bib citation info is not ready at this time
 
 Acknowledgment
 
