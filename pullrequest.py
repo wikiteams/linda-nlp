@@ -208,6 +208,7 @@ def descr_user(s):
                 control.value = cyrillic2latin(first_name).encode('utf-8')
             #check if value is enough
             #control.text = first_name
+            scream.say('Control value is set to :' + str(control.value))
             submit_retry_counter = 4
             while True:
                 try:
@@ -218,10 +219,10 @@ def descr_user(s):
                     submit_retry_counter -= 1
                     if submit_retry_counter < 1:
                         break
-                    error_message = 'Site genderchecker.com seems to have internal problems'
-                    + '. or my request is wibbly-wobbly nonsense. awaiting for 60s before retry'
+                    error_message = 'Site genderchecker.com seems to have internal problems. or my request is' +\
+                        ' wibbly-wobbly nonsense. awaiting for 60s before retry'
                     scream.say(error_message)
-                    scream.log_error(e.code + ': ' + error_message)
+                    scream.log_error(str(e.code) + ': ' + error_message)
                     time.sleep(60)
             local_soup = BeautifulSoup(html)
             failed = local_soup.find("span",
