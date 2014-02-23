@@ -57,6 +57,8 @@ nohup python pullrequest.py client_oath_id client_secret pull#repoowner#reponame
 
 Be advised, that GitHub quota mechanism may apply and cut you from downloading through urllib and API.
 
+PS: You can run Python with the -u flag to *avoid output buffering*
+
 **Required data**
 
 You will need to place a dataset .csv file which you can download from here: https://dl.dropboxusercontent.com/u/103068909/comments_on_github_2013.csv

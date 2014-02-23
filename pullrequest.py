@@ -169,33 +169,34 @@ def descr_user(s):
                               + '?client_id='
                               + client_id + '&client_secret='
                               + client_secret)
-    #print response
+    scream.ssay(response)
     data = simplejson.load(response)
-    #print data
+    scream.ssay(data)
     #fullname = data['name']
     if 'name' in data:
         fullname = data['name']
     else:
-        #print 'fullname not provided'
+        scream.say('Fullname not provided')
         persist_users[s] = None
         return s
     if fullname is None:
-        #print 'fullname provided but an empty entry'
+        scream.say('Fullname provided but an empty entry')
         persist_users[s] = None
         return s
     if (len(fullname) > 0):
         first_name = unicode(fullname.split()[0])
         if (len(first_name) > 0):
-            #ask now internet for gender
+            scream.say('#ask now internet for gender')
             while True:
                 try:
                     response = my_browser.open('http://genderchecker.com/')
                     response.read()
                     break
                 except urllib2.URLError:
-                    print ('Site genderchecker.com seems to be down' +
-                           '. awaiting for 60s before retry')
+                    scream.ssay('Site genderchecker.com seems to be down' +
+                                '. awaiting for 60s before retry')
                     time.sleep(60)
+            scream.say('Response read. Mechanize selecting form.')
             my_browser.select_form("aspnetForm")
             my_browser.form.set_all_readonly(False)
             # allow everything to be written
@@ -234,14 +235,14 @@ def descr_user(s):
                                      {"id":
                                       "ctl00_ContentPlaceHolder1_" +
                                       "LabelGenderFound"}).contents[0].string
-            #print gender
+            scream.say(gender)
             persist_users[s] = s + ',' + fullname.strip() + ',' + gender
             return s + ',' + fullname.strip() + ',' + gender
         else:
             persist_users[s] = s + ',' + fullname.strip()
             return s + ',' + fullname.strip()
     else:
-        #print 'fullname not provided'
+        scream.say('Fullname not provided')
         persist_users[s] = None
         return s
 
@@ -277,11 +278,16 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
             scream.log_error(filename + '.json' + 'is without proper html. ' +
                              'GitHub not responding or giving 404/501 erorr ??')
             return None
+    scream.say('No action required. retry_if_neccessary() returning gotten_tag')
     return gotten_tag
 
 if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say(version_name)
+
+    ACCOUNT_REMOVED_LABEL = '__ACCOUNT_DELETED'
+    scream.intelliTag_verbose = True
+    logmissed.intelliDialogue_verbose = True
 
     #initialize browser for the gender studies :)
     my_browser = mechanize.Browser()
@@ -393,18 +399,27 @@ if __name__ == "__main__":
                             #github changed to a new tag:
                             discussion_initiator = soup.find("a", {
                                 "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
+                            scream.say('Describing user: ' + discussion_initiator + ' unicode: ' + unicode(discussion_initiator))
                             result_txt_file.write(u'-[' + descr_user(unicode(discussion_initiator)) + u']' + os.linesep)
                             result_txt_file.write(u'[' + discussion_title + u']' + os.linesep + os.linesep)
 
                             for candidate in soup.findAll("div", {"class": "comment js-comment js-task-list-container"}):
-                                author = candidate.find("a", {"class": "author"})
-                                author = retry_if_neccessary(author, "a", "class", "author")
-                                if author is None:
-                                    continue
+                                scream.say(str(candidate))
+                                #scream.say(str(candidate.contents))
+                                author_is_deleted = candidate.find("span", {"aria-label": "Oops! This commit is missing author information."})
+                                if author_is_deleted is None:
+                                    author = candidate.find("a", {"class": "author"})
+                                    author = retry_if_neccessary(author, "a", "class", "author")
+                                    if author is None:
+                                        continue
+                                    else:
+                                        author = author.contents[0]
+                                    scream.say('Describing user (inside candiate loop): ' + author + ' unicode: ' + unicode(author))
+                                    result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
+                                    scream.say('User described and result line written')
                                 else:
-                                    author = author.contents[0]
-                                scream.say('Describing user: ' + author + ' unicode: ' + unicode(author))
-                                result_txt_file.write(u'-[' + descr_user(unicode(author)) + u']' + os.linesep)
+                                    scream.say('Authors github account was deleted permanently')
+                                    result_txt_file.write(u'-[' + ACCOUNT_REMOVED_LABEL + u']' + os.linesep)
                                 sentence_search = candidate.find("div", {"class": "comment-body markdown-body markdown-format js-comment-body"})
                                 if sentence_search is not None:
                                     sentence = sentence_search.contents[1:-1]
@@ -412,6 +427,7 @@ if __name__ == "__main__":
                                         tag = str(s).strip()
                                         if ((len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
+                                scream.say('sentence_search loop passed')
                                 email_search = candidate.find("div", {"class": "comment-body markdown-body email-format js-comment-body"})
                                 if email_search is not None:
                                     sentence = email_search.contents[1:-1]
@@ -419,9 +435,14 @@ if __name__ == "__main__":
                                         tag = str(s).strip()
                                         if ((len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
+                                scream.say('email_search loop passed')
+                        scream.say('Closing result file')
                         result_txt_file.close()
+                        scream.say('Result file closed')
 
+                    scream.say('Checking md5')
                     hexi = hashlib.md5(open(filename + '.txt').read()).hexdigest()
+                    scream.say(str(hexi))
                     if hexi in persist_md5:
                         scream.say('Duplicated!')
                         os.remove(filename + '.txt')
