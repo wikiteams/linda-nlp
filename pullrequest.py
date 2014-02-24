@@ -295,6 +295,22 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
     scream.say('No action required. retry_if_neccessary() returning gotten_tag')
     return gotten_tag
 
+
+def retry_json(how_many_times, wait_time):
+    while how_many_times > 0:
+        scream.say('JSON retrieved to small! Retrying ' + str(how_many_times) + ' more times.')
+        how_many_times -= 1
+        time.sleep(wait_time)
+        json = simplejson.load(key + '?client_id='
+                               + client_id + '&client_secret='
+                               + client_secret)
+        if (len(json) >= 2):
+            if not (('message' in json) and (json['message'].startswith('API rate limit exceeded for'))):
+                # successfuly got a longer JSON, move on to next elif
+                break
+    return json
+
+
 if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say(version_name)
@@ -377,21 +393,17 @@ if __name__ == "__main__":
             with open(local_filename, 'r') as content_file:
                 json = simplejson.load(content_file)
                 #print json
-                rr = 3
                 if (len(json) < 2):
-                    while rr > 0:
-                        scream.say('JSON retrieved to small! Retrying ' + str(rr) + ' more times.')
-                        rr -= 1
-                        time.sleep(60)
-                        json = simplejson.load(key + '?client_id='
-                                               + client_id + '&client_secret='
-                                               + client_secret)
-                        if (len(json) >= 2):
-                            # successfuly got a longer JSON, move on to next elif
-                            break
+                    scream.say('JSON empty! lunching retry_json(3, 60) protocol')
+                    json = retry_json(3, 60)
+                if ('message' in json) and (json['message'].startswith('API rate limit exceeded for')):
+                    scream.say('GitHub API quota exceeded! lunching retry_json(12, 60*60) protocol')
+                    json = retry_json(12, 60 * 60)
                 if (len(json) < 2):
                     #check again, if JSON still small than actually od nothing
                     scream.say('JSON retrieved to small, pullrequest won\'t be processed')
+                elif ('message' in json) and (json['message'].startswith('API rate limit exceeded for')):
+                    scream.say('GitHub API quota not renewed already for 12 hours! pull request won\'t be processed')
                 elif ('message' in json) and (json['message'] == 'Not Found'):
                     scream.say('Pull request dont exist anymore')
                 else:
