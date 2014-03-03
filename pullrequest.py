@@ -4,10 +4,10 @@ Downloads more details about dialogues happening in GitHub.
 Now (from version 1.1) includes new GitHub discussion layout
 (which changed around 01/02.2014)
 
-@version 1.2
+@version 1.2.0303
 @author Oskar Jarczyk
 @since 1.0
-@update 22.02.2014
+@update 03.03.2014
 '''
 
 version_name = 'version 1.2 codename: Thorne-Zytkow'
@@ -245,13 +245,19 @@ def descr_user(s):
             if failed is not None:
                 persist_users[s] = s + ',' + fullname.strip()
                 return s + ',' + fullname.strip()
-            gender = local_soup.find("span",
-                                     {"id":
-                                      "ctl00_ContentPlaceHolder1_" +
-                                      "LabelGenderFound"}).contents[0].string
-            scream.say(gender)
-            persist_users[s] = s + ',' + fullname.strip() + ',' + gender
-            return s + ',' + fullname.strip() + ',' + gender
+            gender_tag = local_soup.find("span",
+                                         {"id":
+                                         "ctl00_ContentPlaceHolder1_" +
+                                         "LabelGenderFound"})
+            if ((gender_tag is not None) and (gender_tag.contents is not None) and (len(gender_tag.contents) > 0)):
+                gender = gender_tag.contents[0].string
+                scream.say(gender)
+                persist_users[s] = s + ',' + fullname.strip() + ',' + gender
+                return s + ',' + fullname.strip() + ',' + gender
+            else:
+                scream.log_warning('Something really wrong, on result page there was no not-found label neither a proper result')
+                persist_users[s] = s + ',' + fullname.strip()
+                return s + ',' + fullname.strip()
         else:
             persist_users[s] = s + ',' + fullname.strip()
             return s + ',' + fullname.strip()
