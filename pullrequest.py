@@ -429,8 +429,14 @@ if __name__ == "__main__":
                             discussion_title = title_h1.find("span", {"class": "js-issue-title"}).contents[0] + title_h1.find(
                                 "span", {"class": "gh-header-number"}).contents[0]
                             #github changed to a new tag:
-                            discussion_initiator = soup.find("a", {
-                                "class": "author pull-header-username css-truncate css-truncate-target expandable"}).contents[0].strip()
+                            discussion_initiator_a = soup.find("a", {
+                                "class": "author pull-header-username css-truncate css-truncate-target expandable"})
+                            discussion_initiator_a = retry_if_neccessary(discussion_initiator_a, "a",
+                                                                         "class",
+                                                                         "author pull-header-username css-truncate css-truncate-target expandable")
+                            if discussion_initiator_a is None:
+                                continue
+                            discussion_initiator = discussion_initiator_a.contents[0].strip()
                             scream.say('Describing user: ' + discussion_initiator + ' unicode: ' + unicode(discussion_initiator))
                             result_txt_file.write(u'-[' + descr_user(unicode(discussion_initiator)) + u']' + os.linesep)
                             result_txt_file.write(u'[' + discussion_title + u']' + os.linesep + os.linesep)
