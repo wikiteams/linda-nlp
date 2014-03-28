@@ -169,10 +169,17 @@ def descr_user(s):
         else:
             return persist_users[s]
     #get user name and surname here
-    response = urllib.urlopen('https://api.github.com/users/' + s
-                              + '?client_id='
-                              + client_id + '&client_secret='
-                              + client_secret)
+    while True:
+        try:
+            response = urllib.urlopen('https://api.github.com/users/' + s
+                                      + '?client_id='
+                                      + client_id + '&client_secret='
+                                      + client_secret)
+            break
+        except IOError:
+            print 'API GitHub not responding, urlopen failed'
+            print 'retrying after 1 minute'
+            time.sleep(60)
     scream.ssay(response)
     data = simplejson.load(response)
     scream.ssay(data)
