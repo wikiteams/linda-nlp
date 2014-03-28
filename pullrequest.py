@@ -229,18 +229,23 @@ def descr_user(s):
                 except mechanize.HTTPError, e:
                     submit_retry_counter -= 1
                     if submit_retry_counter < 1:
-                        break
-                    error_message = 'Site genderchecker.com seems to have internal problems. or my request is' +\
-                        ' wibbly-wobbly nonsense. HTTPError ' + str(e.code) + '. awaiting for 60s before retry'
+                        raise StopIteration
+                    error_message = 'Site genderchecker.com seems to have ' +\
+                                    'internal problems. or my request is' +\
+                                    ' wibbly-wobbly nonsense. HTTPError ' +\
+                                    str(e.code) +\
+                                    '. awaiting for 60s before retry'
                     scream.say(error_message)
                     scream.log_error(str(e.code) + ': ' + error_message)
                     time.sleep(60)
                 except:
                     submit_retry_counter -= 1
                     if submit_retry_counter < 1:
-                        break
-                    error_message = 'Site genderchecker.com seems to have internal problems. or my request is' +\
-                        ' wibbly-wobbly nonsense. awaiting for 60s before retry'
+                        raise StopIteration
+                    error_message = 'Site genderchecker.com seems to have ' +\
+                                    'internal problems. or my request is' +\
+                                    ' wibbly-wobbly nonsense. ' +\
+                                    'awaiting for 60s before retry'
                     scream.say(error_message)
                     scream.log_error(error_message)
                     time.sleep(60)
@@ -262,7 +267,8 @@ def descr_user(s):
                 persist_users[s] = s + ',' + fullname.strip() + ',' + gender
                 return s + ',' + fullname.strip() + ',' + gender
             else:
-                scream.log_warning('Something really wrong, on result page there was no not-found label neither a proper result')
+                scream.log_warning('Something really wrong, on result page there ' +
+                                   'was no not-found label neither a proper result')
                 persist_users[s] = s + ',' + fullname.strip()
                 return s + ',' + fullname.strip()
         else:
@@ -274,8 +280,10 @@ def descr_user(s):
         return s
 
 
-# This method tries to get HTML discussion site again again when there is a problem with finding by th BS
-# proper html tags which allways indicate author or discussion content - a must content to exist
+# This method tries to get HTML discussion site again again
+# when there is a problem with finding by th BS
+# proper html tags which allways indicate author
+# or discussion content - a must content to exist
 def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
     how_long = 60
     if gotten_tag is None:
@@ -290,7 +298,9 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
                         html_addr, filename + '.html')
                     break
                 except IOError:
-                    io_socket_message = 'Socket error while retrieving HTML file from GitHub! Internet or GitHub down? Retry after 1 minute'
+                    io_socket_message = 'Socket error while retrieving HTML' +\
+                                        ' file from GitHub! Internet or ' +\
+                                        'GitHub down? Retry after 1 minute'
                     scream.ssay(io_socket_message)
                     scream.log_warning(io_socket_message)
                     time.sleep(60)
@@ -298,7 +308,7 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
             soup = BeautifulSoup(html_content_file)
             gotten_tag = soup.find(tagname, {objectname: arg_objectname})
             if gotten_tag is not None:
-                break
+                raise StopIteration
         if gotten_tag is None:
             #nothing to do here, lets move on
             scream.ssay('orphaned' + filename + '.json')
@@ -320,7 +330,7 @@ def retry_json(how_many_times, wait_time):
         if (len(json) >= 2):
             if not (('message' in json) and (json['message'].startswith('API rate limit exceeded for'))):
                 # successfuly got a longer JSON, move on to next elif
-                break
+                raise StopIteration
     return json
 
 
@@ -395,11 +405,13 @@ if __name__ == "__main__":
                                                                  + client_secret, filename + '.json')
                     break
                 except IOError:
-                    scream.ssay('Error retrieving data from GitHub API. Socket error / timeout. Retry after ' + str(json_timeout) + ' s.')
+                    scream.ssay('Error retrieving data from GitHub API. ' +
+                                'Socket error / timeout. Retry after ' + str(json_timeout) + ' s.')
                     time.sleep(json_timeout)
                     json_timeout *= 2
                 except:
-                    scream.ssay('Error retrieving data from GitHub API. Unknown error. Retry after ' + str(json_timeout) + ' s.')
+                    scream.ssay('Error retrieving data from GitHub API. ' +
+                                'Unknown error. Retry after ' + str(json_timeout) + ' s.')
                     time.sleep(json_timeout)
                     json_timeout *= 2
 
