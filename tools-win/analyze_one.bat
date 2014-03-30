@@ -1,0 +1,1 @@
+for %%i in (pull*.txt) do python langid\langid.py -n < %%i > %%i.one.lang
