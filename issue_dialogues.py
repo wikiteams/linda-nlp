@@ -4,10 +4,10 @@ Downloads more details about dialogues held under issues in GitHub.
 Now (from version 1.1) includes new GitHub discussion layout
 (which changed around 01/02.2014)
 
-@version 1.2.0303
+@version 1.2.0401
 @author Oskar Jarczyk
 @since 1.0
-@update 03.03.2014
+@update 1.04.2014
 '''
 
 version_name = 'version 1.2 codename: Thorne-Zytkow'
@@ -230,7 +230,7 @@ def descr_user(s):
                 except mechanize.HTTPError, e:
                     submit_retry_counter -= 1
                     if submit_retry_counter < 1:
-                        raise StopIteration
+                        break
                     error_message = 'Site genderchecker.com seems to have ' +\
                                     'internal problems. or my request is' +\
                                     ' wibbly-wobbly nonsense. HTTPError ' +\
@@ -242,7 +242,7 @@ def descr_user(s):
                 except:
                     submit_retry_counter -= 1
                     if submit_retry_counter < 1:
-                        raise StopIteration
+                        break
                     error_message = 'Site genderchecker.com seems to have ' +\
                                     'internal problems. or my request is' +\
                                     ' wibbly-wobbly nonsense. ' +\
@@ -309,7 +309,7 @@ def retry_if_neccessary(gotten_tag, tagname, objectname, arg_objectname):
             soup = BeautifulSoup(html_content_file)
             gotten_tag = soup.find(tagname, {objectname: arg_objectname})
             if gotten_tag is not None:
-                raise StopIteration
+                break  # raise StopIteration maybe would be better but break is enough
         if gotten_tag is None:
             #nothing to do here, lets move on
             scream.ssay('orphaned' + filename + '.json')
@@ -373,18 +373,19 @@ if __name__ == "__main__":
             #issuenumber = key.split('/')[8]
 
             filename = 'issue' + '#' + repoowner + '#' + reponame + '#'
+            guess_iterator_beginning = 1
 
             if resume_from_entity is not None:
-                if filename == resume_from_entity:
+                guess_iterator_beginning = int(resume_from_entity.split('#')[3])
+                if filename + str(guess_iterator_beginning) == resume_from_entity:
                     scream.say('Found! Resuming work.')
-                    #scream.say(issuenumber)
                     resume_from_entity = None
                 else:
                     continue
 
             with open(filename + 'all.log', 'wb') as log_file:
                 mark_404 = None
-                for guess_iterator in range(1, 500000):
+                for guess_iterator in range(guess_iterator_beginning, 500000):
                     html_addr = url + '/issues/' + str(guess_iterator)
                     filename_with_issue_id = filename + str(guess_iterator)
                     local_filename_html, headers_html = urllib.urlretrieve(
