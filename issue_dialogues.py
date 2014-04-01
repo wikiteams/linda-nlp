@@ -221,7 +221,7 @@ def descr_user(s):
             #check if value is enough
             #control.text = first_name
             scream.say('Control value is set to :' + str(control.value))
-            submit_retry_counter = 4
+            submit_retry_counter = 60
             while True:
                 try:
                     response = my_browser.submit()
@@ -388,8 +388,14 @@ if __name__ == "__main__":
                 for guess_iterator in range(guess_iterator_beginning, 500000):
                     html_addr = url + '/issues/' + str(guess_iterator)
                     filename_with_issue_id = filename + str(guess_iterator)
-                    local_filename_html, headers_html = urllib.urlretrieve(
-                        html_addr, filename_with_issue_id + '.html')
+                    while True:
+                        try:
+                            local_filename_html, headers_html = urllib.urlretrieve(
+                                html_addr, filename_with_issue_id + '.html')
+                            break
+                        except IOError:
+                            scream.say('GitHub page not responding, problem with GitHub, try again')
+                            time.sleep(30)
                     scream.say('File downloaded, lets get to scrapping dialogues from there..')
                     with codecs.open(filename + str(guess_iterator) + '.txt', 'wb', 'utf-8') as result_txt_file:
                         with open(local_filename_html, 'r') as html_content_file:
@@ -452,7 +458,7 @@ if __name__ == "__main__":
                                 if sentence_search is not None:
                                     sentence = sentence_search.contents[1:-1]
                                     for s in sentence:
-                                        tag = str(s).strip()
+                                        tag = unicode(s).strip().encode('utf-8')
                                         if ((len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
                                 scream.say('sentence_search loop passed')
