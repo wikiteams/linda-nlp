@@ -41,18 +41,21 @@ It's a command prompt program, requires Python 2.7+
 
 ```
 python pullrequest.py client_oath_id client_secret
+python issue_dialogues.py client_oath_id client_secret
 ```
 
 or unix nohup version
 
 ```
 nohup python pullrequest.py client_oath_id client_secret > logs.txt &
+nohup python issue_dialogues.py client_oath_id client_secret > logs.txt &
 ```
 
 if you need to resume from a step, add additional argument at pos 3:
 
 ```
 nohup python pullrequest.py client_oath_id client_secret pull#repoowner#reponame#pullnumber > logs.txt &
+nohup python issue_dialogues.py client_oath_id client_secret pull#repoowner#reponame#pullnumber > logs.txt &
 ```
 
 Be advised, that GitHub quota mechanism may apply and cut you from downloading through urllib and API.
@@ -62,6 +65,8 @@ PS: You can run Python with the **-u flag** to avoid output buffering
 **Required data**
 
 You will need to place a dataset .csv file which you can download from here: https://dl.dropboxusercontent.com/u/103068909/comments_on_github_2013.csv
+For downloading discussions under the issues please take this dataset:
+https://dl.dropboxusercontent.com/u/103068909/result_stargazers_2013_final_mature.csv
 The .csv file must be located in the same directory where the python script is located.
 Dig into my code for further reference..
 
