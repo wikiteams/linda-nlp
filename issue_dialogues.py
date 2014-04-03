@@ -199,34 +199,30 @@ def descr_user(s):
         first_name = unicode(fullname.split()[0])
         if (len(first_name) > 0):
             scream.say('#ask now internet for gender')
+            submit_retry_counter = 240
             while True:
                 try:
                     response = my_browser.open('http://genderchecker.com/')
                     response.read()
+                    scream.say('Response read. Mechanize selecting form.')
+                    my_browser.select_form("aspnetForm")
+                    my_browser.form.set_all_readonly(False)
+                    # allow everything to be written
+                    control = my_browser.form.find_control("ctl00$TextBoxName")
+                    #check if value is enough
+                    #control.text = first_name
+                    scream.say('Control value is set to :' + str(control.value))
+                    if only_roman_chars(first_name):
+                        control.value = StripNonAlpha(first_name.encode('utf-8'))
+                    else:
+                        control.value = StripNonAlpha(cyrillic2latin(first_name).encode('utf-8'))
+                    response = my_browser.submit()
+                    html = response.read()
                     break
                 except urllib2.URLError:
                     scream.ssay('Site genderchecker.com seems to be down' +
                                 '. awaiting for 60s before retry')
                     time.sleep(60)
-            scream.say('Response read. Mechanize selecting form.')
-            my_browser.select_form("aspnetForm")
-            my_browser.form.set_all_readonly(False)
-            # allow everything to be written
-
-            control = my_browser.form.find_control("ctl00$TextBoxName")
-            if only_roman_chars(first_name):
-                control.value = StripNonAlpha(first_name.encode('utf-8'))
-            else:
-                control.value = StripNonAlpha(cyrillic2latin(first_name).encode('utf-8'))
-            #check if value is enough
-            #control.text = first_name
-            scream.say('Control value is set to :' + str(control.value))
-            submit_retry_counter = 60
-            while True:
-                try:
-                    response = my_browser.submit()
-                    html = response.read()
-                    break
                 except mechanize.HTTPError, e:
                     submit_retry_counter -= 1
                     if submit_retry_counter < 1:
@@ -466,7 +462,7 @@ if __name__ == "__main__":
                                 if email_search is not None:
                                     sentence = email_search.contents[1:-1]
                                     for s in sentence:
-                                        tag = str(s).strip()
+                                        tag = unicode(s).strip().encode('utf-8')
                                         if ((len(tag) > 1) and (tag != 'None')):
                                             result_txt_file.write(unicode(remove_html_markup(tag), 'utf-8') + os.linesep)
                                 scream.say('email_search loop passed')
