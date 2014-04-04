@@ -4,10 +4,10 @@ Downloads more details about dialogues held under issues in GitHub.
 Now (from version 1.1) includes new GitHub discussion layout
 (which changed around 01/02.2014)
 
-@version 1.2.0401
+@version 1.2.0405
 @author Oskar Jarczyk
 @since 1.0
-@update 1.04.2014
+@update 5.04.2014
 '''
 
 version_name = 'version 1.2 codename: Thorne-Zytkow'
@@ -421,7 +421,7 @@ if __name__ == "__main__":
                             discussion_initiator_issue = discussion_initiator_diva.find("a", {
                                 "class": "author"})
                             if discussion_initiator_issue is None:
-                                discussion_initiator_a = discussion_initiator_pull[1]
+                                discussion_initiator_a = discussion_initiator_pull[-1]
                             else:
                                 discussion_initiator_a = discussion_initiator_issue
                             #scream.say('discussion_initiator is: ' + discussion_initiator_a)
