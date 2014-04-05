@@ -421,14 +421,21 @@ if __name__ == "__main__":
                             discussion_initiator_issue = discussion_initiator_diva.find("a", {
                                 "class": "author"})
                             if discussion_initiator_issue is None:
-                                discussion_initiator_a = discussion_initiator_pull[-1]
+                                scream.say(discussion_initiator_pull)
+                                if len(discussion_initiator_pull) > 0:
+                                    discussion_initiator_a = discussion_initiator_pull[-1]
+                                else:
+                                    discussion_initiator_a = repoowner
                             else:
                                 discussion_initiator_a = discussion_initiator_issue
                             #scream.say('discussion_initiator is: ' + discussion_initiator_a)
                             
                             if discussion_initiator_a is None:
                                 continue
-                            discussion_initiator = discussion_initiator_a.contents[0].strip()
+                            if isinstance(discussion_initiator_a, str):
+                                discussion_initiator = discussion_initiator_a
+                            else:
+                                discussion_initiator = discussion_initiator_a.contents[0].strip()
                             scream.say('Describing user: ' + discussion_initiator + ' unicode: ' + unicode(discussion_initiator))
                             result_txt_file.write(u'-[' + descr_user(unicode(discussion_initiator)) + u']' + os.linesep)
                             result_txt_file.write(u'[' + discussion_title + u']' + os.linesep + os.linesep)
