@@ -4,10 +4,10 @@ Downloads more details about dialogues held under issues in GitHub.
 Now (from version 1.1) includes new GitHub discussion layout
 (which changed around 01/02.2014)
 
-@version 1.2.0405
+@version 1.2.0408
 @author Oskar Jarczyk
 @since 1.0
-@update 5.04.2014
+@update 8.04.2014
 '''
 
 version_name = 'version 1.2 codename: Thorne-Zytkow'
@@ -173,7 +173,7 @@ def descr_user(s):
     while True:
         try:
             response = urllib.urlopen('https://api.github.com/users/' + s
-                                      + '?client_id='
+                                      + '?token=' + client_token + '?client_id='
                                       + client_id + '&client_secret='
                                       + client_secret)
             break
@@ -333,21 +333,24 @@ if __name__ == "__main__":
 
     resume_from_entity = None
 
-    if len(sys.argv) < 3:
-        scream.say('OAuth id and/or secret missing, '
+    if len(sys.argv) < 4:
+        scream.say('Token, OAuth id and/or secret missing, '
                    + 'please lunch program with credentials as arguments')
         exit(-1)
-    if len(sys.argv) > 4:
+    if len(sys.argv) > 5:
         scream.say('Too many arguments provided. Check manual and try again')
         exit(-1)
-    if len(sys.argv) == 4:
-        resume_from_entity = sys.argv[3].strip()
+    if len(sys.argv) == 5:
+        resume_from_entity = sys.argv[4].strip()
 
-    scream.say('using: ' + sys.argv[1])
+    scream.say('using client_id: ' + sys.argv[2])
+
+    sys.setrecursionlimit(2000)
 
     # This information is obtained upon registration of a new GitHub
-    client_id = sys.argv[1]
-    client_secret = sys.argv[2]
+    client_token = sys.argv[1]
+    client_id = sys.argv[2]
+    client_secret = sys.argv[3]
 
     persist_md5 = dict()
     persist_users = dict()
